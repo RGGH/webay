@@ -36,7 +36,18 @@ pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
         let price = listing
             .find(Class("s-item__price"))
             .next()
-            .map(|p| p.text());
+            .map(|p| {
+                let price_str = p.text();
+                let price_f32 = price_str
+                    .replace("£", "")  // Replace with appropriate currency symbol
+                    .replace(",", "")  // Remove thousand separators if present
+                    .trim()             // Trim any extra whitespace
+                    .parse::<f32>()    // Parse the string into f32
+                    .unwrap_or(0.0);   // Default to 0.0 if parsing fails
+                price_f32
+            })
+            .unwrap_or(0.0); // Default to 0.0 if price element not found
+
         let details = listing
             .find(Class("s-item__subtitle"))
             .next()
@@ -61,7 +72,7 @@ pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
                 let listing = Listing {
             title: title.unwrap_or_else(|| "N/A".to_string()),
             url: url.unwrap_or_else(|| "N/A".to_string()),
-            price: price.unwrap_or_else(|| "N/A".to_string()),
+            price,
             details: details.unwrap_or_else(|| "N/A".to_string()),
             seller: seller.unwrap_or_else(|| "N/A".to_string()),
             shipping: shipping.unwrap_or_else(|| "N/A".to_string()),
