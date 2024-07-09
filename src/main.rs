@@ -7,7 +7,9 @@ mod scrape;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    db_new().await;
+    // create db and table to match model
+    let _ = db_new().await;
+    // scrape
     if let Err(e) = scrape().await {
         eprintln!("Error scraping data: {}", e);
     }
