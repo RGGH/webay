@@ -1,17 +1,27 @@
-use db::db_new;
-use scrape::scrape;
 use tokio;
 mod db;
-mod model;
 mod scrape;
+mod model;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // create db and table to match model
-    let _ = db_new().await;
-    // scrape
-    if let Err(e) = scrape().await {
-        eprintln!("Error scraping data: {}", e);
+async fn main() {
+    match db::db_new().await {
+        Ok(db) => {
+            println!("Database initialized successfully.");
+
+            match scrape::scrape().await {
+                Ok(listings) => {
+                    for listing in listings {
+                        match db::insert_listing(&db, &listing).await {
+                            Ok(_) => println!("Inserted listing: {:?}", listing),
+                            Err(e) => eprintln!("Error inserting listing: {}. Listing: {:?}", e, listing),
+                        }
+                    }
+                }
+                Err(e) => eprintln!("Error scraping data: {}", e),
+            }
+        }
+        Err(e) => eprintln!("Error initializing database: {}", e),
     }
-    Ok(())
 }
+

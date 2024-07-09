@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Listing {
     pub title: String,
     pub url: String,

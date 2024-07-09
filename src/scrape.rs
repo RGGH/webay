@@ -8,7 +8,7 @@ const URL: &str =
     "https://www.ebay.co.uk/sch/i.html?p2334524.m570.l1311&_nkw=bamboo+cutlery+organiser";
 const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36";
 
-pub async fn scrape() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn scrape() -> Result<Vec<Listing>, Box<dyn std::error::Error>> {
     let client = Client::new();
     let resp = client
         .get(URL)
@@ -21,6 +21,8 @@ pub async fn scrape() -> Result<(), Box<dyn std::error::Error>> {
     let doc = Document::from(resp.as_str());
 
     let mut count = 0;
+
+    let mut listings:Vec<Listing> = Vec::new();
 
     for listing in doc.find(Class("s-item")) {
         count += 1;
@@ -90,8 +92,10 @@ pub async fn scrape() -> Result<(), Box<dyn std::error::Error>> {
         println!("Sold: {:?}", listing.sold);
 
         println!("{:=^50}", "");
+
+        listings.push(listing);
     }
     println!("Total results found: {}", count);
 
-    Ok(())
+    Ok(listings)
 }
