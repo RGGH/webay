@@ -3,6 +3,8 @@ use reqwest::blocking::Client;
 use select::document::Document;
 use select::predicate::Class;
 
+use crate::model::Listing; 
+
 //const URL: &str = "https://www.ebay.co.uk/sch/i.html?p4432023.m570.l1313&_nkw=power+farming&_sacat=0";
 const URL: &str =
     "https://www.ebay.co.uk/sch/i.html?p2334524.m570.l1311&_nkw=bamboo+cutlery+organiser";
@@ -30,7 +32,7 @@ pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
         let url = listing
             .find(Class("s-item__link"))
             .next()
-            .and_then(|l| l.attr("href"));
+            .and_then(|l| l.attr("href").map(String::from));
         let price = listing
             .find(Class("s-item__price"))
             .next()
@@ -56,14 +58,25 @@ pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
             .next()
             .map(|s| s.text());
 
-        println!("Title: {:?}", title);
-        println!("URL: {:?}", url);
-        println!("Price: {:?}", price);
-        println!("Details: {:?}", details);
-        println!("Seller: {:?}", seller);
-        println!("Shipping: {:?}", shipping);
-        println!("Location: {:?}", location);
-        println!("Sold: {:?}", sold);
+                let listing = Listing {
+            title: title.unwrap_or_else(|| "N/A".to_string()),
+            url: url.unwrap_or_else(|| "N/A".to_string()),
+            price: price.unwrap_or_else(|| "N/A".to_string()),
+            details: details.unwrap_or_else(|| "N/A".to_string()),
+            seller: seller.unwrap_or_else(|| "N/A".to_string()),
+            shipping: shipping.unwrap_or_else(|| "N/A".to_string()),
+            location: location.unwrap_or_else(|| "N/A".to_string()),
+            sold: sold.is_some(),  // Example: Use a boolean condition if sold is present
+        };
+
+        println!("Title: {:?}", listing.title);
+        println!("URL: {:?}", listing.url);
+        println!("Price: {:?}", listing.price);
+        println!("Details: {:?}", listing.details);
+        println!("Seller: {:?}", listing.seller);
+        println!("Shipping: {:?}", listing.shipping);
+        println!("Location: {:?}", listing.location);
+        println!("Sold: {:?}", listing.sold);
 
         println!("{:=^50}", "");
     }
