@@ -1,22 +1,22 @@
-
-use reqwest::blocking::Client;
+use reqwest::Client;
 use select::document::Document;
 use select::predicate::Class;
 
-use crate::model::Listing; 
+use crate::model::Listing;
 
-//const URL: &str = "https://www.ebay.co.uk/sch/i.html?p4432023.m570.l1313&_nkw=power+farming&_sacat=0";
 const URL: &str =
     "https://www.ebay.co.uk/sch/i.html?p2334524.m570.l1311&_nkw=bamboo+cutlery+organiser";
 const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36";
 
-pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn scrape() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     let resp = client
         .get(URL)
         .header(reqwest::header::USER_AGENT, USER_AGENT)
-        .send()?
-        .text()?;
+        .send()
+        .await?
+        .text()
+        .await?;
 
     let doc = Document::from(resp.as_str());
 
@@ -39,11 +39,11 @@ pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
             .map(|p| {
                 let price_str = p.text();
                 let price_f32 = price_str
-                    .replace("£", "")  // Replace with appropriate currency symbol
-                    .replace(",", "")  // Remove thousand separators if present
-                    .trim()             // Trim any extra whitespace
-                    .parse::<f32>()    // Parse the string into f32
-                    .unwrap_or(0.0);   // Default to 0.0 if parsing fails
+                    .replace("£", "") // Replace with appropriate currency symbol
+                    .replace(",", "") // Remove thousand separators if present
+                    .trim() // Trim any extra whitespace
+                    .parse::<f32>() // Parse the string into f32
+                    .unwrap_or(0.0); // Default to 0.0 if parsing fails
                 price_f32
             })
             .unwrap_or(0.0); // Default to 0.0 if price element not found
@@ -69,7 +69,7 @@ pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
             .next()
             .map(|s| s.text());
 
-                let listing = Listing {
+        let listing = Listing {
             title: title.unwrap_or_else(|| "N/A".to_string()),
             url: url.unwrap_or_else(|| "N/A".to_string()),
             price,
@@ -77,7 +77,7 @@ pub fn scrape() -> Result<(), Box<dyn std::error::Error>> {
             seller: seller.unwrap_or_else(|| "N/A".to_string()),
             shipping: shipping.unwrap_or_else(|| "N/A".to_string()),
             location: location.unwrap_or_else(|| "N/A".to_string()),
-            sold: sold.is_some(),  // Example: Use a boolean condition if sold is present
+            sold: sold.is_some(), // Example: Use a boolean condition if sold is present
         };
 
         println!("Title: {:?}", listing.title);
