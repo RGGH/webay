@@ -15,6 +15,9 @@ pub async fn db_new() -> Result<SqlitePool, Box<dyn std::error::Error>> {
 
     let db = SqlitePool::connect(DB_URL).await?;
 
+    let drop_table = "DROP TABLE IF EXISTS listings;";
+    sqlx::query(drop_table).execute(&db).await?;
+
     let result = sqlx::query(
         "CREATE TABLE IF NOT EXISTS listings (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -26,18 +29,23 @@ pub async fn db_new() -> Result<SqlitePool, Box<dyn std::error::Error>> {
             shipping TEXT NOT NULL,
             location TEXT NOT NULL,
             sold BOOLEAN NOT NULL
-        );"
-    ).execute(&db).await?;
+        );",
+    )
+    .execute(&db)
+    .await?;
 
     println!("Create listings table result: {:?}", result);
 
     Ok(db)
 }
 
-pub async fn insert_listing(db: &SqlitePool, listing: &crate::model::Listing) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn insert_listing(
+    db: &SqlitePool,
+    listing: &crate::model::Listing,
+) -> Result<(), Box<dyn std::error::Error>> {
     let result = sqlx::query(
         "INSERT INTO listings (title, url, price, details, seller, shipping, location, sold)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&listing.title)
     .bind(&listing.url)
@@ -54,4 +62,3 @@ pub async fn insert_listing(db: &SqlitePool, listing: &crate::model::Listing) ->
 
     Ok(())
 }
-
